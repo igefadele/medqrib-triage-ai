@@ -1,5 +1,5 @@
 """
-MediPulse AI: Client Integration & Test Script
+MedQrib Triage AI: Client Integration & Test Script
 Author: Ige Fadele (https://igefadele.savadub.com)
 
 Demonstrates client-side consumption of Server-Sent Events (SSE)

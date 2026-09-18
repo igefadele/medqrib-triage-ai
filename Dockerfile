@@ -1,4 +1,4 @@
-# MediPulse AI: Clinical Triage Production Container
+# MedQrib Triage AI: Clinical Triage Production Container
 FROM python:3.11-slim
 
 # System dependencies for scientific computing and CUDA support

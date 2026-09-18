@@ -1,4 +1,4 @@
-# 🩺 MediPulse AI: Enterprise Clinical Triage & Telemedicine Intake Intelligence
+# 🩺 MedQrib Triage AI: Enterprise Clinical Triage & Telemedicine Intake Intelligence
 ### *A Production-Hardened, Offline-Resilient Microservice Combining Deterministic Physiological Safety Gates with Domain-Specialized SLM (QLoRA) Streaming*
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -34,16 +34,16 @@ When enterprise health systems, HMOs, and telemedicine providers attempt to auto
 > ### 🎓 Master This Architecture from First Principles
 > If you want to learn how to design, architect, fine-tune, and deploy enterprise AI systems like this step-by-step, check out the **[Data Science, AI Systems & Machine Learning Engineering Track](https://institute.savadub.com/track/data-science)** on **[Savadub Institute](https://institute.savadub.com/)**.
 
-### The MediPulse AI Solution
-**MediPulse AI** is an open-source, enterprise-grade clinical AI microservice designed to solve these exact challenges. It couples **deterministic, sub-2ms CPU-level physiological safety gating** with a **domain-adapted, 4-bit quantized Small Language Model (SLM)** fine-tuned via QLoRA on Meta-Llama-3-8B-Instruct. 
+### The MedQrib Triage AI Solution
+**MedQrib Triage AI** is an open-source, enterprise-grade clinical AI microservice designed to solve these exact challenges. It couples **deterministic, sub-2ms CPU-level physiological safety gating** with a **domain-adapted, 4-bit quantized Small Language Model (SLM)** fine-tuned via QLoRA on Meta-Llama-3-8B-Instruct. 
 
-MediPulse runs completely on-premises on cost-effective edge hardware (requiring just **12 GB VRAM**), streams structured, physician-ready **SOAP clinical notes** in real time via Server-Sent Events (SSE), and guarantees zero data leakage outside the hospital's private infrastructure.
+MedQrib Triage runs completely on-premises on cost-effective edge hardware (requiring just **12 GB VRAM**), streams structured, physician-ready **SOAP clinical notes** in real time via Server-Sent Events (SSE), and guarantees zero data leakage outside the hospital's private infrastructure.
 
 ---
 
 ## 📐 High-Level Architecture & End-to-End Dataflow
 
-MediPulse AI implements a three-tier defense-in-depth architecture that strictly decouples life-critical physiological emergency triage from probabilistic natural language summarization:
+MedQrib Triage AI implements a three-tier defense-in-depth architecture that strictly decouples life-critical physiological emergency triage from probabilistic natural language summarization:
 
 ```
                           ┌─────────────────────────────────────────────────────────┐
@@ -114,11 +114,11 @@ MediPulse AI implements a three-tier defense-in-depth architecture that strictly
 
 ### 1. Asynchronous Microservice Engineering (FastAPI + ASGI)
 - **Non-Blocking Lifespan Management**: Implemented with Python's `@asynccontextmanager` (`lifespan`), decoupling heavy weight loading and CUDA VRAM allocation from the request-handling event loop. The service boots in milliseconds and dynamically unloads GPU tensors upon shutdown.
-- **Server-Sent Events (SSE) Streaming**: Instead of holding blocking HTTP connections open for 4 to 10 seconds while generating clinical summaries, MediPulse leverages `StreamingResponse(..., media_type="text/event-stream")` with Hugging Face's `TextIteratorStreamer` spawned in an isolated background thread. Tokens stream to the clinician's browser or mobile device with a **Time-To-First-Token (TTFT) under 100ms**.
+- **Server-Sent Events (SSE) Streaming**: Instead of holding blocking HTTP connections open for 4 to 10 seconds while generating clinical summaries, MedQrib Triage leverages `StreamingResponse(..., media_type="text/event-stream")` with Hugging Face's `TextIteratorStreamer` spawned in an isolated background thread. Tokens stream to the clinician's browser or mobile device with a **Time-To-First-Token (TTFT) under 100ms**.
 - **Strict Pydantic v2 Data Contracts**: Intake telemetry is strictly validated using bounded Pydantic schemas (`ClinicalIntakeRequest`), enforcing physiological bounds (e.g., body temperature between $32.0^\circ\text{C}$ and $44.0^\circ\text{C}$, heart rate between 25 and 250 bpm, blood oxygen saturation between 40% and 100%) to reject malformed or corrupted sensor inputs before they ever touch the model pipeline.
 
 ### 2. Deterministic Physiological Safety Gate (<2ms Execution)
-In safety-critical medical engineering, relying on probabilistic language model generation to detect life-threatening physiological collapse is a fatal design flaw. MediPulse enforces a **Tier 1 deterministic gate** implemented in pure CPU Python:
+In safety-critical medical engineering, relying on probabilistic language model generation to detect life-threatening physiological collapse is a fatal design flaw. MedQrib Triage enforces a **Tier 1 deterministic gate** implemented in pure CPU Python:
 ```python
 def evaluate_tier1_vitals(request: ClinicalIntakeRequest) -> Optional[str]:
     alerts = []
@@ -145,7 +145,7 @@ def evaluate_tier1_vitals(request: ClinicalIntakeRequest) -> Optional[str]:
 - **Guaranteed Zero GPU Latency on Emergencies**: Patients presenting with lethal vital signs completely bypass the neural network. The gate executes in under **2 milliseconds**, instantly streaming a red-flag emergency alert and instruction to route the patient to acute resuscitation.
 
 ### 3. Domain-Specialized SLM via 4-bit QLoRA Fine-Tuning
-Rather than deploying bloated 70B+ parameter models requiring multi-GPU server farms, MediPulse demonstrates that a modern 8-billion parameter model (`Meta-Llama-3-8B-Instruct`), fine-tuned with Parameter-Efficient Fine-Tuning (PEFT), matches and exceeds generalist frontier models on clinical triage tasks while slashing hardware requirements by **85%**.
+Rather than deploying bloated 70B+ parameter models requiring multi-GPU server farms, MedQrib Triage demonstrates that a modern 8-billion parameter model (`Meta-Llama-3-8B-Instruct`), fine-tuned with Parameter-Efficient Fine-Tuning (PEFT), matches and exceeds generalist frontier models on clinical triage tasks while slashing hardware requirements by **85%**.
 
 - **4-bit NormalFloat (NF4) Quantization**: Utilizing `bitsandbytes`, the 16-bit base model weights are quantized into 4-bit NormalFloat format with double quantization, compressing the base model memory footprint from $\sim 16\text{GB}$ down to **$\sim 5.5\text{GB}$**.
 - **Low-Rank Adaptation (LoRA) Geometry**:
@@ -157,7 +157,7 @@ Rather than deploying bloated 70B+ parameter models requiring multi-GPU server f
 - **Optimization Strategy**: Supervised Fine-Tuning (SFT) utilizing Hugging Face `trl.SFTTrainer` with `paged_adamw_8bit`, gradient accumulation steps of 4, and mixed-precision `bfloat16`/`fp16`.
 
 ### 4. Universal Medical Standardization (SOAP Format)
-MediPulse transforms free-form, unvetted patient complaints into structured **SOAP notes** universally recognized by physicians, nurses, and hospital information systems:
+MedQrib Triage transforms free-form, unvetted patient complaints into structured **SOAP notes** universally recognized by physicians, nurses, and hospital information systems:
 - **S (Subjective)**: Translates colloquialisms and dialectal phrasing into precise clinical terminology (e.g., *"chest burning and heart pounding fast-fast"* $\rightarrow$ *acute substernal chest discomfort accompanied by palpitations and tachypnea*).
 - **O (Objective)**: Synthesizes core physiological telemetry (SpO2, heart rate, temperature, systolic BP) into clinical severity indicators.
 - **A (Assessment)**: Formulates differential diagnoses grounded in WHO Integrated Management of Childhood Illness (IMCI) and endemic regional epidemiology (Severe Malaria, Bronchopneumonia, Sepsis, Gastroenteritis with severe dehydration, Preeclampsia). Assigns triage queue acuity (**RED / YELLOW / GREEN**).
@@ -236,7 +236,7 @@ Verifies microservice availability, loaded model weights, and compute accelerati
 ```json
 {
   "status": "healthy",
-  "service": "MediPulse AI Clinical Triage",
+  "service": "MedQrib Triage AI Clinical Triage",
   "model_loaded": true,
   "device": "CUDA"
 }
@@ -324,7 +324,7 @@ data: ACTION: Route patient immediately to Resuscitation / Urgent Physician Beds
 
 ## 🐳 Containerization & Cloud Deployment Matrix
 
-MediPulse is packaged with a production-hardened, multi-stage `Dockerfile` optimized for minimal attack surface, fast container start times, and direct hardware acceleration.
+MedQrib Triage is packaged with a production-hardened, multi-stage `Dockerfile` optimized for minimal attack surface, fast container start times, and direct hardware acceleration.
 
 ```bash
 # Build production Docker image
@@ -353,7 +353,7 @@ docker run -d \
 ## 🔒 Enterprise Governance, Privacy & Clinical Guardrails
 
 1. **Strict PHI Data Sovereignty (HIPAA / GDPR / NDPR)**:
-   - In contrast to proprietary LLM SaaS APIs where clinical notes are transmitted to remote servers, MediPulse processes 100% of telemetry within your local clinic or private VPC network boundary.
+   - In contrast to proprietary LLM SaaS APIs where clinical notes are transmitted to remote servers, MedQrib Triage processes 100% of telemetry within your local clinic or private VPC network boundary.
    - No patient identifiable data is cached, logged to third-party endpoints, or retained across generation cycles.
 2. **Deterministic Anti-Hallucination Boundaries**:
    - The Tier 1 deterministic gate enforces immutable clinical red lines that no neural network weight can override.
@@ -367,7 +367,7 @@ docker run -d \
 
 ## 🎓 Master Enterprise AI Systems & ML Engineering at Savadub Institute
 
-Looking to master the architecture, fine-tuning, and systems engineering patterns implemented in MediPulse AI? This project serves as a real-world reference implementation and portfolio capstone within the **[Data Science, AI Systems & Machine Learning Engineering Track](https://institute.savadub.com/track/data-science)** at **[Savadub Institute](https://institute.savadub.com/)**.
+Looking to master the architecture, fine-tuning, and systems engineering patterns implemented in MedQrib Triage AI? This project serves as a real-world reference implementation and portfolio capstone within the **[Data Science, AI Systems & Machine Learning Engineering Track](https://institute.savadub.com/track/data-science)** at **[Savadub Institute](https://institute.savadub.com/)**.
 
 Whether you are a software engineer transitioning into AI, an ML practitioner scaling beyond toy Jupyter notebooks, or an enterprise architect designing mission-critical AI systems, this curriculum delivers audited, hands-on masterclasses:
 
@@ -386,7 +386,7 @@ Whether you are a software engineer transitioning into AI, an ML practitioner sc
 
 ## 💼 Enterprise Integration, Customization & Consulting Services
 
-Are you looking to deploy MediPulse AI within your hospital network, telemedicine platform, health insurance system, or government healthcare ministry?
+Are you looking to deploy MedQrib Triage AI within your hospital network, telemedicine platform, health insurance system, or government healthcare ministry?
 
 I provide end-to-end technical consulting, bespoke machine learning engineering, and enterprise architecture integration services:
 
@@ -411,12 +411,12 @@ I provide end-to-end technical consulting, bespoke machine learning engineering,
 This project is released to the global developer, healthcare, and machine learning communities as open-source software. 
 
 ### Attribution Notice:
-If you use MediPulse AI in commercial applications, academic research, hackathons, or hospital pilots, **please provide clear attribution** to the original author:
+If you use MedQrib Triage AI in commercial applications, academic research, hackathons, or hospital pilots, **please provide clear attribution** to the original author:
 
 ```bibtex
 @software{fadele2026medipulse,
   author = {Fadele, Ige},
-  title = {MediPulse AI: Clinical Triage & Telemedicine Intake Intelligence Microservice},
+  title = {MedQrib Triage AI: Clinical Triage & Telemedicine Intake Intelligence Microservice},
   year = {2026},
   url = {https://github.com/igefadele/medipulse},
   note = {Enterprise Hybrid AI Architecture for Clinical Triage}

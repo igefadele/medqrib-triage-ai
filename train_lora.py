@@ -1,5 +1,5 @@
 """
-MediPulse AI: Clinical LoRA Fine-Tuning Pipeline
+MedQrib Triage AI: Clinical LoRA Fine-Tuning Pipeline
 Author: Ige Fadele (https://igefadele.savadub.com)
 
 This script fine-tunes Meta-Llama-3-8B-Instruct on clinical triage intake
@@ -23,8 +23,8 @@ DATASET_PATH = os.path.join(os.path.dirname(__file__), "data", "medipulse_sample
 OUTPUT_ADAPTER_DIR = os.getenv("OUTPUT_ADAPTER_DIR", "./medipulse_clinical_adapter")
 
 def train():
-    print(f"[MediPulse AI] Initializing QLoRA Fine-Tuning for: {BASE_MODEL_NAME}")
-    print(f"[MediPulse AI] Dataset source: {DATASET_PATH}")
+    print(f"[MedQrib Triage AI] Initializing QLoRA Fine-Tuning for: {BASE_MODEL_NAME}")
+    print(f"[MedQrib Triage AI] Dataset source: {DATASET_PATH}")
 
     # 1. 4-bit NormalFloat Quantization Configuration
     bnb_config = BitsAndBytesConfig(
@@ -95,13 +95,13 @@ def train():
         args=training_args
     )
 
-    print("[MediPulse AI] Starting training loop...")
+    print("[MedQrib Triage AI] Starting training loop...")
     trainer.train()
 
-    print(f"[MediPulse AI] Saving adapter weights to: {OUTPUT_ADAPTER_DIR}")
+    print(f"[MedQrib Triage AI] Saving adapter weights to: {OUTPUT_ADAPTER_DIR}")
     model.save_pretrained(OUTPUT_ADAPTER_DIR)
     tokenizer.save_pretrained(OUTPUT_ADAPTER_DIR)
-    print("[MediPulse AI] Training completed successfully.")
+    print("[MedQrib Triage AI] Training completed successfully.")
 
 if __name__ == "__main__":
     train()

@@ -1,5 +1,5 @@
 """
-MediPulse AI: Clinical Triage & Telemedicine Streaming Microservice
+MedQrib Triage AI: Clinical Triage & Telemedicine Streaming Microservice
 Author: Ige Fadele (https://igefadele.savadub.com)
 
 A high-performance FastAPI microservice implementing:
@@ -27,37 +27,37 @@ ADAPTER_PATH = os.getenv("ADAPTER_PATH", "./medipulse_clinical_adapter")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Loads clinical models on startup and cleans up memory on shutdown."""
-    print("[MediPulse AI] Initializing Clinical Triage Microservice...")
+    print("[MedQrib Triage AI] Initializing Clinical Triage Microservice...")
     try:
         if os.path.exists(ADAPTER_PATH):
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
             from peft import PeftModel
 
-            print(f"[MediPulse AI] Loading base model: {BASE_MODEL}")
+            print(f"[MedQrib Triage AI] Loading base model: {BASE_MODEL}")
             tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
             base_model = AutoModelForCausalLM.from_pretrained(
                 BASE_MODEL,
                 torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
                 device_map="auto" if torch.cuda.is_available() else None
             )
-            print(f"[MediPulse AI] Attaching clinical LoRA adapter: {ADAPTER_PATH}")
+            print(f"[MedQrib Triage AI] Attaching clinical LoRA adapter: {ADAPTER_PATH}")
             model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
             model.eval()
 
             model_registry["tokenizer"] = tokenizer
             model_registry["model"] = model
-            print("[MediPulse AI] Model successfully loaded into memory.")
+            print("[MedQrib Triage AI] Model successfully loaded into memory.")
         else:
-            print(f"[MediPulse AI] Notice: Adapter at '{ADAPTER_PATH}' not detected. Running in simulated fallback mode for local evaluation.")
+            print(f"[MedQrib Triage AI] Notice: Adapter at '{ADAPTER_PATH}' not detected. Running in simulated fallback mode for local evaluation.")
     except Exception as exc:
-        print(f"[MediPulse AI] Engine initialization warning: {exc}")
+        print(f"[MedQrib Triage AI] Engine initialization warning: {exc}")
     yield
     model_registry.clear()
-    print("[MediPulse AI] Service shutdown: models unloaded.")
+    print("[MedQrib Triage AI] Service shutdown: models unloaded.")
 
 app = FastAPI(
-    title="MediPulse AI - Clinical Triage Microservice",
+    title="MedQrib Triage AI - Clinical Triage Microservice",
     description="Deterministic vital-sign safety gating + QLoRA-streamed clinical SOAP summaries.",
     version="1.0.0",
     lifespan=lifespan
@@ -135,7 +135,7 @@ def mock_clinical_stream(request: ClinicalIntakeRequest) -> AsyncGenerator[str, 
 def health():
     return {
         "status": "healthy",
-        "service": "MediPulse AI Clinical Triage",
+        "service": "MedQrib Triage AI Clinical Triage",
         "model_loaded": "model" in model_registry,
         "device": "CUDA" if os.environ.get("CUDA_VISIBLE_DEVICES") else "CPU/Simulated"
     }
@@ -162,7 +162,7 @@ def triage_stream_endpoint(request: ClinicalIntakeRequest):
             model = model_registry["model"]
 
             system_prompt = (
-                "You are MediPulse AI. Generate a structured clinical SOAP note summarizing the patient intake "
+                "You are MedQrib Triage AI. Generate a structured clinical SOAP note summarizing the patient intake "
                 "for the attending physician. Highlight red flags and triage acuity. NEVER prescribe medications."
             )
             user_prompt = (
